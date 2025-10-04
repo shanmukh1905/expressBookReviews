@@ -1,8 +1,63 @@
+const axios = require("axios");
 const express = require('express');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
+
+
+public_users.get('/async/books', async (req, res) => {
+  try {
+    // Simulate an async operation for local data
+    const getBooks = () => new Promise(resolve => setTimeout(() => resolve(books), 100));
+    const bookList = await getBooks();
+    res.send(JSON.stringify(bookList, null, 4));
+  } catch (err) {
+    res.status(500).send('Error fetching books');
+  }
+});
+
+public_users.get('/async/isbn/:isbn', async (req, res) => {
+  try {
+    const isbn = req.params.isbn;
+    const getBook = () => new Promise((resolve, reject) => {
+      setTimeout(() => books[isbn] ? resolve(books[isbn]) : reject('Book not found'), 100);
+    });
+    const book = await getBook();
+    res.send(book);
+  } catch (err) {
+    res.status(404).send(err);
+  }
+});
+
+
+public_users.get('/async/author/:author', async (req, res) => {
+  try {
+    const author = req.params.author;
+    const getBooksByAuthor = () => new Promise(resolve => setTimeout(() => {
+      const found = Object.values(books).filter(book => book.author === author);
+      resolve(found);
+    }, 100));
+    const booksList = await getBooksByAuthor();
+    res.send(booksList);
+  } catch (err) {
+    res.status(500).send('Error fetching books by author');
+  }
+});
+
+public_users.get('/async/title/:title', async (req, res) => {
+  try {
+    const title = req.params.title;
+    const getBooksByTitle = () => new Promise(resolve => setTimeout(() => {
+      const found = Object.values(books).filter(book => book.title === title);
+      resolve(found);
+    }, 100));
+    const booksList = await getBooksByTitle();
+    res.send(booksList);
+  } catch (err) {
+    res.status(500).send('Error fetching books by title');
+  }
+});
 
 
 // Register a new user (Task 6)
